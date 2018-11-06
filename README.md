@@ -90,7 +90,11 @@ Translations of the guide are available in the following languages:
   * [Percent Literals](#percent-literals)
   * [Metaprogramming](#metaprogramming)
   * [Tests & RSpec](#tests--rspec)
+  * [UseCases](#usecases)
+      * [Samtnha Project](#samantha--project)
   * [Services](#services)
+      * [Samtnha Project](#samantha--project)
+  * [Grape API](#grape--api)
   * [Misc](#misc)
   * [Tools](#tools)
 
@@ -4545,7 +4549,162 @@ condition](#safe-assignment-in-condition).
     # :get_action, :post_action, :put_action, :delete_action
     ```
 
+   * <a name="tests-describe-class-method"></a>
+     Use `.class_method` or a good description when use `describe`.
+    <sup>[[link](#tests-describe-class-method)]</sup>
+    
+    ```ruby
+    # bad
+    describe '#create_user' do
+    end
+    
+    # bad
+    describe 'Create' do
+    end    
+        
+    # good
+    describe '.create_user' do
+    end
+    
+    # good
+    describe 'Create an user' do
+    end
+    ```
+
+   * <a name="tests-describe-instance-method"></a>
+     Use `#instance_method` or a good description when use `describe`.
+    <sup>[[link](#tests-describe-instance-method)]</sup>
+    
+    ```ruby
+    # bad
+    describe '.create_user' do
+    end
+    
+    # bad
+    describe 'Create' do
+    end    
+        
+    # good
+    describe '#create_user' do
+    end
+    
+    # good
+    describe 'Create an user' do
+    end
+    ```
+    
+## UseCases
+
+  * <a name="usecases-transaction"></a>
+	 Use Transactions when you need to execute many Services will hit on DataBase
+    <sup>[[link](#usecases-transaction)]</sup>
+
+    ```ruby
+    # bad
+    def call
+      create_user
+      update_customer
+    end
+                  
+    # good         
+    def call
+      ApplicationRecord.transaction do
+        create_user
+        update_customer
+      end
+    end
+    
+    # good - If you have another opened transactions on Upper called classes
+    def call
+      ApplicationRecord.transaction(requires_new: true) do
+        create_user
+        update_customer
+      end
+    end
+    
+    ``` 
+
+### Samantha Project
+
+   * <a name="usecases-extend-samantha"></a>
+	 Extend Base class for services.
+    <sup>[[link](#usecases-extend-samantha)]</sup>
+    
+    The BaseUseCase class has many methods to help. Find it in `lib/samantha/samantha/base_use_case.rb`
+    
+    ```ruby
+    # bad
+    module Customer
+      module UseCases
+        class Create
+        end
+      end
+    end 
+        
+    # good 
+    module Customer
+      module UseCases
+        class Create < ::Samantha::BaseUseCase
+        end
+      end
+    end
+    ```    
+    
+   * <a name="usecases-pattern-call-samantha"></a>
+	 Use UseCases as **Command Pattern**. Create a UseCase with a Single Responsability. Is necessary only the method `call` without params. All params will became from the `constructor`.
+    <sup>[[link](#usecases-pattern-call-samantha)]</sup>
+
+    ```ruby
+    # bad
+    def intialize
+      # body omitted
+    end
+          
+    def create(params)
+      # do stuff here    
+    end
+        
+    # good 
+    def intialize(customer:)
+      # body omitted
+    end
+        
+    def call
+      # do stuff here
+    end
+    ``` 
+    
 ## Services
+
+  * <a name="services-transaction"></a>
+	 Use Transactions when you need to execute many actions on DataBase
+    <sup>[[link](#services-transaction)]</sup>
+
+    ```ruby
+    # bad
+    def call
+      create_user
+      update_customer
+    end
+                  
+    # good         
+    def call
+      ApplicationRecord.transaction do
+        create_user
+        update_customer
+      end
+    end
+    
+    # good - If you have another opened transactions on Upper called classes
+    def call
+      ApplicationRecord.transaction(requires_new: true) do
+        create_user
+        update_customer
+      end
+    end
+    
+    ```    
+
 
 ### Samantha Project
 
@@ -4631,7 +4790,8 @@ condition](#safe-assignment-in-condition).
     end
     ```    
 
-
+## Grape API
+    
 ## Misc
 
   * <a name="always-warn"></a>
