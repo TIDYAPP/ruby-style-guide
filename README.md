@@ -4529,15 +4529,107 @@ condition](#safe-assignment-in-condition).
     ```
    * <a name="tests-api"></a>
 	 Request tests - API - How to use HTTP Methods
-    <sup>[[link](#tests-api)]</sup>   	
+    <sup>[[link](#tests-api)]</sup>
+    
+	 Use our wrapper methods for HTTP actions.
     
     ```ruby
     # bad
-    before { }
+    before { get '', params: {}, headers: {} }
         
     # good 
-    before { }
+    before { get_action(path: '', params: {}, token: 'Jh18gawk21hjaj1') }
+    
+    # Available methods -> Requests::JsonHelpers -> spec/support/request_helpers.rb
+    # :get_action, :post_action, :put_action, :delete_action
     ```
+
+## Services
+
+### Samantha Project
+
+   * <a name="services-extend-samantha"></a>
+	 Extend Base class for services.
+    <sup>[[link](#services-extend-samantha)]</sup>
+    
+    The BaseService class has many methods to help. Find it in `lib/samantha/samantha/base_service.rb`
+    
+    ```ruby
+    # bad
+    module Customer
+      module Services
+        class Create
+        end
+      end
+    end 
+        
+    # good 
+    module Customer
+      module Services
+        class Create < ::Samantha::BaseService
+        end
+      end
+    end
+    ```    
+    
+   * <a name="services-initialize-samantha"></a>
+	 For a `Create` or `Update` service given some required object on constructor
+    <sup>[[link](#services-initialize-samantha)]</sup>
+    
+    ```ruby
+    # bad
+    class Update < ::Samantha::BaseService
+      def initialize(params:)
+        # body omitted
+      end
+    end
+    
+	# bad
+    class Update < ::Samantha::BaseService
+      def initialize(params:)
+        # body omitted
+      end
+    end
+            
+    # good 
+    class Create < ::Samantha::BaseService
+      def initialize(customer:)
+        # body omitted
+      end
+    end
+    
+    # good 
+    class Update < ::Samantha::BaseService
+      def initialize(customer:, params:)
+        # body omitted
+      end
+    end
+    ```
+    
+    * <a name="services-pattern-call-samantha"></a>
+	 Use Services as **Command Pattern**. Create a service with a Single Responsability. Is necessary only the method `call` without params. All params will became from the `constructor`.
+    <sup>[[link](#services-pattern-call-samantha)]</sup>
+
+    ```ruby
+    # bad
+    def intialize
+      # body omitted
+    end
+          
+    def create(params)
+      # do stuff here    
+    end
+        
+    # good 
+    def intialize(customer:)
+      # body omitted
+    end
+        
+    def call
+      # do stuff here
+    end
+    ```    
+
 
 ## Misc
 
