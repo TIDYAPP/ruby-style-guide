@@ -89,6 +89,12 @@ Translations of the guide are available in the following languages:
   * [Regular Expressions](#regular-expressions)
   * [Percent Literals](#percent-literals)
   * [Metaprogramming](#metaprogramming)
+  * [Tests & RSpec](#tests--rspec)
+  * [UseCases](#usecases)
+      * [Samtnha Project](#samantha--project)
+  * [Services](#services)
+      * [Samtnha Project](#samantha--project)
+  * [Grape API](#grape--api)
   * [Misc](#misc)
   * [Tools](#tools)
 
@@ -563,13 +569,10 @@ Translations of the guide are available in the following languages:
     ```
 
   * <a name="consistent-multi-line-chains"></a>
-    Adopt a consistent multi-line method chaining style. There are two popular
-    styles in the Ruby community, both of which are considered
-    good&mdash;leading `.` (Option A) and trailing `.` (Option B).
+    Adopt a consistent multi-line method chaining style.
     <sup>[[link](#consistent-multi-line-chains)]</sup>
 
-      * **(Option A)** When continuing a chained method invocation on
-        another line keep the `.` on the second line.
+	When continuing a chained method invocation on another line keep the `.` on the second line.
 
         ```ruby
         # bad - need to consult first line to understand second line
@@ -579,24 +582,13 @@ Translations of the guide are available in the following languages:
         # good - it's immediately clear what's going on the second line
         one.two.three
           .four
-        ```
-
-      * **(Option B)** When continuing a chained method invocation on another line,
-        include the `.` on the first line to indicate that the
-        expression continues.
-
-        ```ruby
-        # bad - need to read ahead to the second line to know that the chain continues
-        one.two.three
+          
+        # good - it's immediately clear what's going on the first line
+        one
+        	.two
+        	.three
           .four
-
-        # good - it's immediately clear that the expression continues beyond the first line
-        one.two.three.
-          four
         ```
-
-    A discussion on the merits of both alternative styles can be found
-    [here](https://github.com/rubocop-hq/ruby-style-guide/pull/176).
 
   * <a name="no-double-indent"></a>
     Align the parameters of a method call if they span more than one
@@ -698,9 +690,9 @@ Translations of the guide are available in the following languages:
     Use [YARD][yard] and its conventions for API documentation.
     <sup>[[link](#api-documentation)]</sup>
 
-  * <a name="80-character-limits"></a>
-    Limit lines to 80 characters.
-    <sup>[[link](#80-character-limits)]</sup>
+  * <a name="120-character-limits"></a>
+    Limit lines to 120 characters.
+    <sup>[[link](#120-character-limits)]</sup>
 
   * <a name="no-trailing-whitespace"></a>
     Avoid trailing whitespace.
@@ -2808,7 +2800,7 @@ condition](#safe-assignment-in-condition).
       end
     end
     ```
-
+    
   * <a name="modules-vs-classes"></a>
     Prefer modules to classes with only class methods. Classes should be used
     only when it makes sense to create instances out of them.
@@ -4431,6 +4423,375 @@ condition](#safe-assignment-in-condition).
     u2.__send__ ...
     ```
 
+
+## Tests & RSpec
+        
+   * <a name="namespace-definition-tests"></a>
+	 For RSpec declaration, prefer implicit nesting. That will avoid incorrect autoload.
+    <sup>[[link](#namespace-definition-tests)]</sup>   	
+    
+    ```ruby
+    module Utilities
+      class Queue
+      end
+    end
+
+    # bad    
+    module Utilities
+      describe Queue do
+      end
+    end
+
+    # good
+    RSpec.describe Utilities::Queue do
+    end
+    ```
+        
+   * <a name="tag-definition-tests"></a>
+	 Add Tags declaration to specifie what kind of test is.
+    <sup>[[link](#tag-definition-tests)]</sup>   	
+    
+    ```ruby
+    module Utilities
+      class Queue
+      end
+    end
+
+    # bad    
+    RSpec.describe Utilities::Queue do
+    end
+
+    # good - Usually modules in **plural**
+    RSpec.describe Utilities::Queue, :utilities do
+    end
+    
+    # Multiple Modules and Scopes
+    
+    module Samantha
+      module Customer
+    	  module Services
+    		class Create
+    		end
+      	  end      	
+      end
+    end
+
+    # bad    
+    RSpec.describe Samantha::Customer::Services::Create do
+    end
+
+    # good - Usually *modules* in **plural** & *types* in **singular**
+    RSpec.describe Samantha::Customer::Services::Create, :services, type: %i[customer] do
+    end
+    ```
+
+   * <a name="tests-freeze-time"></a>
+	 Freezing Time
+    <sup>[[link](#tests-freeze-time)]</sup>   	
+    
+    ```ruby
+    # bad    
+    RSpec.describe Utilities::Queue, :utilities do
+    	before { Timecop.freeze }
+    	after { Timecop.return }
+    end
+
+    RSpec.describe Utilities::Queue, :utilities do
+    	it do 
+    		Timecop.freeze
+    		# Do some tests here
+    		Timecop.return
+    	end
+    end
+    
+    # good
+    RSpec.describe Utilities::Queue, :utilities do
+       before { freeze_time }
+       after { freeze_return }
+    end
+    
+    RSpec.describe Utilities::Queue, :utilities do
+       before { freeze_time }
+       
+    	it 'Some it', :run_freeze_return do 
+    		# Do some tests here
+    	end
+    end
+    ```
+
+   * <a name="tests-rake-task"></a>
+	 How declare and test - Rake Task
+    <sup>[[link](#tests-rake-task)]</sup>   	
+    
+    ```ruby
+    # good 
+    require 'rails_helper'
+    Rake.application.rake_require 'tasks/airflow/run_pairing_optimizer_for_next_day'
+    
+    describe 'rake airflow:run_pairing_optimizer_for_next_day', :tasks,
+    	type: %i[task airflow] do
+    end
+    ```
+   * <a name="tests-api"></a>
+	 Request tests - API - How to use HTTP Methods
+    <sup>[[link](#tests-api)]</sup>
+    
+	 Use our wrapper methods for HTTP actions.
+    
+    ```ruby
+    # bad
+    before { get '', params: {}, headers: {} }
+        
+    # good 
+    before { get_action(path: '', params: {}, token: 'Jh18gawk21hjaj1') }
+    
+    # Available methods -> Requests::JsonHelpers -> spec/support/request_helpers.rb
+    # :get_action, :post_action, :put_action, :delete_action
+    ```
+
+   * <a name="tests-describe-class-method"></a>
+     Use `.class_method` or a good description when use `describe`.
+    <sup>[[link](#tests-describe-class-method)]</sup>
+    
+    ```ruby
+    # bad
+    describe '#create_user' do
+    end
+    
+    # bad
+    describe 'Create' do
+    end    
+        
+    # good
+    describe '.create_user' do
+    end
+    
+    # good
+    describe 'Create an user' do
+    end
+    ```
+
+   * <a name="tests-describe-instance-method"></a>
+     Use `#instance_method` or a good description when use `describe`.
+    <sup>[[link](#tests-describe-instance-method)]</sup>
+    
+    ```ruby
+    # bad
+    describe '.create_user' do
+    end
+    
+    # bad
+    describe 'Create' do
+    end    
+        
+    # good
+    describe '#create_user' do
+    end
+    
+    # good
+    describe 'Create an user' do
+    end
+    ```
+    
+## UseCases
+
+  * <a name="usecases-transaction"></a>
+	 Use Transactions when you need to execute many Services will hit on DataBase
+    <sup>[[link](#usecases-transaction)]</sup>
+
+    ```ruby
+    # bad
+    def call
+      create_user
+      update_customer
+    end
+                  
+    # good         
+    def call
+      ApplicationRecord.transaction do
+        create_user
+        update_customer
+      end
+    end
+    
+    # good - If you have another opened transactions on Upper called classes
+    def call
+      ApplicationRecord.transaction(requires_new: true) do
+        create_user
+        update_customer
+      end
+    end
+    
+    ``` 
+
+### Samantha Project
+
+   * <a name="usecases-extend-samantha"></a>
+	 Extend Base class for services.
+    <sup>[[link](#usecases-extend-samantha)]</sup>
+    
+    The BaseUseCase class has many methods to help. Find it in `lib/samantha/samantha/base_use_case.rb`
+    
+    ```ruby
+    # bad
+    module Customer
+      module UseCases
+        class Create
+        end
+      end
+    end 
+        
+    # good 
+    module Customer
+      module UseCases
+        class Create < ::Samantha::BaseUseCase
+        end
+      end
+    end
+    ```    
+    
+   * <a name="usecases-pattern-call-samantha"></a>
+	 Use UseCases as **Command Pattern**. Create a UseCase with a Single Responsability. Is necessary only the method `call` without params. All params will became from the `constructor`.
+    <sup>[[link](#usecases-pattern-call-samantha)]</sup>
+
+    ```ruby
+    # bad
+    def intialize
+      # body omitted
+    end
+          
+    def create(params)
+      # do stuff here    
+    end
+        
+    # good 
+    def intialize(customer:)
+      # body omitted
+    end
+        
+    def call
+      # do stuff here
+    end
+    ``` 
+    
+## Services
+
+  * <a name="services-transaction"></a>
+	 Use Transactions when you need to execute many actions on DataBase
+    <sup>[[link](#services-transaction)]</sup>
+
+    ```ruby
+    # bad
+    def call
+      create_user
+      update_customer
+    end
+                  
+    # good         
+    def call
+      ApplicationRecord.transaction do
+        create_user
+        update_customer
+      end
+    end
+    
+    # good - If you have another opened transactions on Upper called classes
+    def call
+      ApplicationRecord.transaction(requires_new: true) do
+        create_user
+        update_customer
+      end
+    end
+    
+    ```    
+
+
+### Samantha Project
+
+   * <a name="services-extend-samantha"></a>
+	 Extend Base class for services.
+    <sup>[[link](#services-extend-samantha)]</sup>
+    
+    The BaseService class has many methods to help. Find it in `lib/samantha/samantha/base_service.rb`
+    
+    ```ruby
+    # bad
+    module Customer
+      module Services
+        class Create
+        end
+      end
+    end 
+        
+    # good 
+    module Customer
+      module Services
+        class Create < ::Samantha::BaseService
+        end
+      end
+    end
+    ```    
+    
+   * <a name="services-initialize-samantha"></a>
+	 For a `Create` or `Update` service given some required object on constructor
+    <sup>[[link](#services-initialize-samantha)]</sup>
+    
+    ```ruby
+    # bad
+    class Update < ::Samantha::BaseService
+      def initialize(params:)
+        # body omitted
+      end
+    end
+    
+	# bad
+    class Update < ::Samantha::BaseService
+      def initialize(params:)
+        # body omitted
+      end
+    end
+            
+    # good 
+    class Create < ::Samantha::BaseService
+      def initialize(customer:)
+        # body omitted
+      end
+    end
+    
+    # good 
+    class Update < ::Samantha::BaseService
+      def initialize(customer:, params:)
+        # body omitted
+      end
+    end
+    ```
+    
+    * <a name="services-pattern-call-samantha"></a>
+	 Use Services as **Command Pattern**. Create a service with a Single Responsability. Is necessary only the method `call` without params. All params will became from the `constructor`.
+    <sup>[[link](#services-pattern-call-samantha)]</sup>
+
+    ```ruby
+    # bad
+    def intialize
+      # body omitted
+    end
+          
+    def create(params)
+      # do stuff here    
+    end
+        
+    # good 
+    def intialize(customer:)
+      # body omitted
+    end
+        
+    def call
+      # do stuff here
+    end
+    ```    
+
+## Grape API
+    
 ## Misc
 
   * <a name="always-warn"></a>
