@@ -90,6 +90,7 @@ Translations of the guide are available in the following languages:
   * [Percent Literals](#percent-literals)
   * [Metaprogramming](#metaprogramming)
   * [Tests & RSpec](#tests--rspec)
+  * [Services](#services)
   * [Misc](#misc)
   * [Tools](#tools)
 
